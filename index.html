@@ -82,34 +82,30 @@
       return `Aktuální čas: ${date} ${time}`;
     }
 
-    // Funkce pro odstranění diakritiky
-    function removeDiacritics(str) {
-      const diacriticsMap = {
-        'á': 'a', 'í': 'i', 'ě': 'e', 'š': 's', 'č': 'c', 'ř': 'r', 'ž': 'z', 'ó': 'o', 'ť': 't', 'ú': 'u', 'ů': 'u', 'ý': 'y', 'Á': 'A', 'Í': 'I', 'Ě': 'E', 'Š': 'S', 'Č': 'C', 'Ř': 'R', 'Ž': 'Z', 'Ó': 'O', 'Ť': 'T', 'Ú': 'U', 'Ů': 'U', 'Ý': 'Y'
-      };
-      return str.split('').map(char => diacriticsMap[char] || char).join('');
+    // Funkce pro odstranění diakritiky a převod na malá písmena
+    function removeDiacritics(text) {
+      return text
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
     }
 
-    // Zobrazí aktuální čas při načtení stránky
     document.getElementById('timestamp').innerText = getCurrentDateTimeString();
 
     document.getElementById('submit').addEventListener('click', function () {
-      const name = document.getElementById('name').value.trim();
+      const originalName = document.getElementById('name').value.trim();
+      const name = removeDiacritics(originalName);
       const location = document.getElementById('location').value;
 
-      if (!name || !location) {
+      if (!originalName || !location) {
         document.getElementById('response').innerText = 'Vyplňte všechna pole.';
         return;
       }
 
-      const formattedName = removeDiacritics(name);       // Odstranění diakritiky
-      const formattedLocation = removeDiacritics(location); // Odstranění diakritiky
-
       const formData = new FormData();
-      formData.append('entry.736433288', formattedName);      // Jméno
-      formData.append('entry.685021946', formattedLocation);  // Místo
+      formData.append('entry.736433288', name);      // BEZ diakritiky
+      formData.append('entry.685021946', location);  // Místo
 
-      // Odeslání dat na Google Forms
       fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSefMUVcf4PUCw1EhVrco_hzrCjrcRZ-GhJpWk05u12y_pXgpQ/formResponse', {
         method: 'POST',
         mode: 'no-cors',
