@@ -84,7 +84,10 @@
 
     // Funkce pro odstranění diakritiky
     function removeDiacritics(str) {
-      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const diacriticsMap = {
+        'á': 'a', 'í': 'i', 'ě': 'e', 'š': 's', 'č': 'c', 'ř': 'r', 'ž': 'z', 'ó': 'o', 'ť': 't', 'ú': 'u', 'ů': 'u', 'ý': 'y', 'Á': 'A', 'Í': 'I', 'Ě': 'E', 'Š': 'S', 'Č': 'C', 'Ř': 'R', 'Ž': 'Z', 'Ó': 'O', 'Ť': 'T', 'Ú': 'U', 'Ů': 'U', 'Ý': 'Y'
+      };
+      return str.split('').map(char => diacriticsMap[char] || char).join('');
     }
 
     // Zobrazí aktuální čas při načtení stránky
