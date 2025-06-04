@@ -82,7 +82,10 @@
       return `Aktuální čas: ${date} ${time}`;
     }
 
-    // Zobrazí aktuální čas při načtení stránky
+    function removeDiacritics(str) {
+      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    }
+
     document.getElementById('timestamp').innerText = getCurrentDateTimeString();
 
     document.getElementById('submit').addEventListener('click', function () {
@@ -94,11 +97,12 @@
         return;
       }
 
-      const formData = new FormData();
-      formData.append('entry.736433288', name);      // Jméno
-      formData.append('entry.685021946', location);  // Místo
+      const normalizedName = removeDiacritics(name);
 
-      // Odeslání dat na Google Forms
+      const formData = new FormData();
+      formData.append('entry.736433288', normalizedName); // Jméno (bez diakritiky)
+      formData.append('entry.685021946', location);       // Místo
+
       fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSefMUVcf4PUCw1EhVrco_hzrCjrcRZ-GhJpWk05u12y_pXgpQ/formResponse', {
         method: 'POST',
         mode: 'no-cors',
