@@ -85,17 +85,6 @@
 
     document.getElementById('timestamp').innerText = getCurrentDateTimeString();
 
-    async function overKod(code) {
-      try {
-        const response = await fetch(`${API_URL}?code=${code}`);
-        const data = await response.json();
-        return data.exists;
-      } catch (error) {
-        console.error('Chyba při ověřování kódu:', error);
-        return false;
-      }
-    }
-
     document.getElementById('submit').addEventListener('click', async function () {
       const codeInput = document.getElementById('code');
       const code = codeInput.value.trim();
@@ -115,35 +104,33 @@
         return;
       }
 
-      const kodExistuje = await overKod(code);
+      // Odeslání ověřovacího požadavku pro heslo
+      const response = await fetch(`${API_URL}/zaznamenejDochazku`, {
+        method: 'POST',
+        body: JSON.stringify({ heslo: code, misto: location }), // Odeslání hesla a místa
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (!kodExistuje) {
+      const data = await response.json();
+
+      // Zpracování odpovědi
+      if (data.status === 'ok') {
+        responseElem.innerText = `Docházka úspěšně zaznamenána pro: ${data.jmeno}`;
+        responseElem.style.color = '#10b981';
+      } else if (data.status === 'neexistuje') {
         responseElem.innerText = 'Zadaný kód neexistuje.';
         responseElem.style.color = '#ef4444';
-        return;
+      } else {
+        responseElem.innerText = 'Něco se pokazilo.';
+        responseElem.style.color = '#ef4444';
       }
 
-      // Odeslání do Google Forms
-      const formData = new FormData();
-      formData.append('entry.736433288', code);       // ← ID pole pro kód
-      formData.append('entry.685021946', location);   // ← ID pole pro místo
-
-      fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSefMUVcf4PUCw1EhVrco_hzrCjrcRZ-GhJpWk05u12y_pXgpQ/formResponse', {
-        method: 'POST',
-        mode: 'no-cors',
-        body: formData
-      })
-      .then(() => {
-        responseElem.innerText = 'Údaje byly úspěšně odeslány!';
-        responseElem.style.color = '#10b981';
-        document.getElementById('timestamp').innerText = getCurrentDateTimeString();
-        codeInput.value = '';
-        document.getElementById('location').value = '';
-      })
-      .catch(error => {
-        responseElem.innerText = 'Nastala chyba: ' + error.message;
-        responseElem.style.color = '#ef4444';
-      });
+      // Resetování formuláře a timestampu
+      codeInput.value = '';
+      document.getElementById('location').value = '';
+      document.getElementById('timestamp').innerText = getCurrentDateTimeString();
     });
 
     // Povolit jen čísla při psaní
