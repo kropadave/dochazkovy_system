@@ -55,23 +55,12 @@
       font-size: 14px;
       color: #6b7280;
     }
-    .register-link {
-      display: inline-block;
-      margin-top: 12px;
-      font-size: 14px;
-      color: #6b7280;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-    .register-link:hover {
-      color: #000000;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Docházkový systém</h1>
-    <input type="password" id="password" placeholder="Zadej své heslo" required />
+    <input type="text" id="code" placeholder="Zadejte svůj 6místný kód" maxlength="6" required />
     <select id="location" required>
       <option value="">-- Vyber místo --</option>
       <option>ZŠ Purkyňova Vyškov</option>
@@ -82,11 +71,11 @@
     <button id="submit">Odeslat</button>
     <div id="response"></div>
     <div id="timestamp"></div>
-
-    <a class="register-link" href="https://script.google.com/macros/s/AKfycbzWP0LiJiOzILaWU2GhBasYQKrBB_TOGagswVSQK9Sxz3AL2bHVydCf6d99ETI_DBA4/exec" target="_blank">Nejsi zaregistrovaný?</a>
   </div>
 
   <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzWP0LiJiOzILaWU2GhBasYQKrBB_TOGagswVSQK9Sxz3AL2bHVydCf6d99ETI_DBA4/exec'; // ← sem vlož URL z Apps Script
+
     function getCurrentDateTimeString() {
       const now = new Date();
       const date = now.toLocaleDateString('cs-CZ');
@@ -96,30 +85,70 @@
 
     document.getElementById('timestamp').innerText = getCurrentDateTimeString();
 
-    document.getElementById('submit').addEventListener('click', function () {
-      const password = document.getElementById('password').value.trim();
+    async function overKod(code) {
+      try {
+        const response = await fetch(`${API_URL}?code=${code}`);
+        const data = await response.json();
+        return data.exists;
+      } catch (error) {
+        console.error('Chyba při ověřování kódu:', error);
+        return false;
+      }
+    }
+
+    document.getElementById('submit').addEventListener('click', async function () {
+      const codeInput = document.getElementById('code');
+      const code = codeInput.value.trim();
       const location = document.getElementById('location').value;
+      const responseElem = document.getElementById('response');
 
-      const responseEl = document.getElementById('response');
-
-      if (!password || !location) {
-        responseEl.style.color = '#ef4444';
-        responseEl.innerText = 'Vyplňte všechna pole.';
+      // Validace kódu: pouze 6 číslic
+      if (!/^\d{6}$/.test(code)) {
+        responseElem.innerText = 'Zadejte platný 6místný číselný kód.';
+        responseElem.style.color = '#ef4444';
         return;
       }
 
-      google.script.run.withSuccessHandler(function(response) {
-        if (response.status === 'ok') {
-          responseEl.style.color = '#10b981';
-          responseEl.innerText = `Docházka zapsána: ${response.jmeno}`;
-          document.getElementById('timestamp').innerText = getCurrentDateTimeString();
-          document.getElementById('password').value = '';
-          document.getElementById('location').value = '';
-        } else {
-          responseEl.style.color = '#ef4444';
-          responseEl.innerText = 'Neplatné heslo.';
-        }
-      }).zaznamenejDochazku({ heslo: password, misto: location });
+      if (!location) {
+        responseElem.innerText = 'Vyberte místo.';
+        responseElem.style.color = '#ef4444';
+        return;
+      }
+
+      const kodExistuje = await overKod(code);
+
+      if (!kodExistuje) {
+        responseElem.innerText = 'Zadaný kód neexistuje.';
+        responseElem.style.color = '#ef4444';
+        return;
+      }
+
+      // Odeslání do Google Forms
+      const formData = new FormData();
+      formData.append('entry.736433288', code);       // ← ID pole pro kód
+      formData.append('entry.685021946', location);   // ← ID pole pro místo
+
+      fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSefMUVcf4PUCw1EhVrco_hzrCjrcRZ-GhJpWk05u12y_pXgpQ/formResponse', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData
+      })
+      .then(() => {
+        responseElem.innerText = 'Údaje byly úspěšně odeslány!';
+        responseElem.style.color = '#10b981';
+        document.getElementById('timestamp').innerText = getCurrentDateTimeString();
+        codeInput.value = '';
+        document.getElementById('location').value = '';
+      })
+      .catch(error => {
+        responseElem.innerText = 'Nastala chyba: ' + error.message;
+        responseElem.style.color = '#ef4444';
+      });
+    });
+
+    // Povolit jen čísla při psaní
+    document.getElementById('code').addEventListener('input', function () {
+      this.value = this.value.replace(/\D/g, '').slice(0, 6);
     });
   </script>
 </body>
