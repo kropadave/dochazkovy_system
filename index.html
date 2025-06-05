@@ -57,16 +57,19 @@
       color: #6b7280;
     }
 
-    .link-button {
-      color: #6b7280;
-      text-decoration: underline;
-      border: none;
-      cursor: pointer;
+    /* Styl pro odkaz místo tlačítka */
+    .register-link {
+      display: inline-block;
       margin-top: 12px;
       font-size: 14px;
-      padding: 0;
+      color: #6b7280;
+      text-decoration: underline;
+      cursor: pointer;
     }
-    
+    .register-link:hover {
+      color: #6b7280;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -83,11 +86,11 @@
     <button id="submit">Odeslat</button>
     <div id="response"></div>
     <div id="timestamp"></div>
-    
-    <!-- tlačítko na registraci -->
-    <button class="link-button" onclick="window.open('https://script.google.com/macros/s/AKfycbzWP0LiJiOzILaWU2GhBasYQKrBB_TOGagswVSQK9Sxz3AL2bHVydCf6d99ETI_DBA4/exec', '_blank')">
+
+    <!-- Odkaz pro registraci -->
+    <a class="register-link" href="https://script.google.com/macros/s/AKfycbzWP0LiJiOzILaWU2GhBasYQKrBB_TOGagswVSQK9Sxz3AL2bHVydCf6d99ETI_DBA4/exec" target="_blank">
       Nejsi zaregistrovaný?
-    </button>
+    </a>
   </div>
 
   <script>
@@ -122,4 +125,12 @@
         document.getElementById('response').innerText = 'Údaje byly úspěšně odeslány!';
         document.getElementById('timestamp').innerText = getCurrentDateTimeString();
         document.getElementById('name').value = '';
-        document.getElementB
+        document.getElementById('location').value = '';
+      })
+      .catch(error => {
+        document.getElementById('response').innerText = 'Nastala chyba: ' + error.message;
+      });
+    });
+  </script>
+</body>
+</html>
