@@ -49,7 +49,6 @@
     #response {
       margin-top: 15px;
       font-size: 14px;
-      color: #10b981;
     }
     #timestamp {
       margin-top: 10px;
@@ -101,21 +100,24 @@
       const password = document.getElementById('password').value.trim();
       const location = document.getElementById('location').value;
 
+      const responseEl = document.getElementById('response');
+
       if (!password || !location) {
-        document.getElementById('response').innerText = 'Vyplňte všechna pole.';
+        responseEl.style.color = '#ef4444';
+        responseEl.innerText = 'Vyplňte všechna pole.';
         return;
       }
 
       google.script.run.withSuccessHandler(function(response) {
         if (response.status === 'ok') {
-          document.getElementById('response').style.color = '#10b981';
-          document.getElementById('response').innerText = `Docházka zapsána: ${response.jmeno}`;
+          responseEl.style.color = '#10b981';
+          responseEl.innerText = `Docházka zapsána: ${response.jmeno}`;
           document.getElementById('timestamp').innerText = getCurrentDateTimeString();
           document.getElementById('password').value = '';
           document.getElementById('location').value = '';
         } else {
-          document.getElementById('response').style.color = '#ef4444';
-          document.getElementById('response').innerText = 'Neplatné heslo.';
+          responseEl.style.color = '#ef4444';
+          responseEl.innerText = 'Neplatné heslo.';
         }
       }).zaznamenejDochazku({ heslo: password, misto: location });
     });
