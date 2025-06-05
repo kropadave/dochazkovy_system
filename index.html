@@ -1,120 +1,55 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Docházkový systém</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f3f4f6;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    .container {
-      background-color: #ffffff;
-      padding: 30px 40px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      text-align: center;
-      width: 100%;
-      max-width: 400px;
-    }
-    h1 {
-      margin-bottom: 20px;
-      color: #111827;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      font-size: 16px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
-    button {
-      background-color: #bb3bf6;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #ae00ff;
-    }
-    #response {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #10b981;
-    }
-    #timestamp {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #6b7280;
+<!-- uvnitř <div class="container"> -->
+<h1>Docházkový systém</h1>
+<input type="password" id="heslo" placeholder="Zadejte své 6místné heslo" required />
+<select id="location" required>
+  <option value="">-- Vyber místo --</option>
+  <option>ZŠ Purkyňova Vyškov</option>
+  <option>ZŠ Letní Pole Vyškov</option>
+  <option>ZŠ Melantrichova Prostějov</option>
+  <option>ZŠ TGM Blansko</option>
+</select>
+<button id="submit">Odeslat</button>
+<div id="response"></div>
+<div id="timestamp"></div>
+
+<!-- Odkaz pro registraci -->
+<a class="register-link" href="TVŮJ_REGISTRAČNÍ_ODKAZ" target="_blank">
+  Nejsi zaregistrovaný?
+</a>
+
+<script>
+  function getCurrentDateTimeString() {
+    const now = new Date();
+    const date = now.toLocaleDateString('cs-CZ');
+    const time = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+    return `Aktuální čas: ${date} ${time}`;
+  }
+
+  document.getElementById('timestamp').innerText = getCurrentDateTimeString();
+
+  document.getElementById('submit').addEventListener('click', function () {
+    const heslo = document.getElementById('heslo').value.trim();
+    const location = document.getElementById('location').value;
+    const response = document.getElementById('response');
+
+    if (!heslo || !location) {
+      response.style.color = '#ef4444';
+      response.innerText = 'Vyplňte všechna pole.';
+      return;
     }
 
-    /* Styl pro odkaz místo tlačítka */
-    .register-link {
-      display: inline-block;
-      margin-top: 12px;
-      font-size: 14px;
-      color: #6b7280;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-    .register-link:hover {
-      color: #000000;
-      text-decoration: underline;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Docházkový systém</h1>
-    <input type="text" id="name" placeholder="Jméno" required />
-    <select id="location" required>
-      <option value="">-- Vyber místo --</option>
-      <option>ZŠ Purkyňova Vyškov</option>
-      <option>ZŠ Letní Pole Vyškov</option>
-      <option>ZŠ Melantrichova Prostějov</option>
-      <option>ZŠ TGM Blansko</option>
-    </select>
-    <button id="submit">Odeslat</button>
-    <div id="response"></div>
-    <div id="timestamp"></div>
-
-    <!-- Odkaz pro registraci -->
-    <a class="register-link" href="https://script.google.com/macros/s/AKfycbzWP0LiJiOzILaWU2GhBasYQKrBB_TOGagswVSQK9Sxz3AL2bHVydCf6d99ETI_DBA4/exec" target="_blank">
-      Nejsi zaregistrovaný?
-    </a>
-  </div>
-
-  <script>
-    function getCurrentDateTimeString() {
-      const now = new Date();
-      const date = now.toLocaleDateString('cs-CZ');
-      const time = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
-      return `Aktuální čas: ${date} ${time}`;
-    }
-
-    document.getElementById('timestamp').innerText = getCurrentDateTimeString();
-
-    document.getElementById('submit').addEventListener('click', function () {
-      const name = document.getElementById('name').value.trim();
-      const location = document.getElementById('location').value;
-
-      if (!name || !location) {
-        document.getElementById('response').innerText = 'Vyplňte všechna pole.';
+    // Zavolání serveru pro ověření hesla
+    google.script.run.withSuccessHandler(function(jmeno) {
+      if (!jmeno) {
+        response.style.color = '#ef4444';
+        response.innerText = 'Neplatné heslo. Nejste zaregistrován.';
         return;
       }
 
+      // Pokračuj v odeslání na Google Formulář
       const formData = new FormData();
-      formData.append('entry.736433288', name);      // Jméno
-      formData.append('entry.685021946', location);  // Místo
+      formData.append('entry.736433288', jmeno);      // Jméno
+      formData.append('entry.685021946', location);   // Místo
 
       fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSefMUVcf4PUCw1EhVrco_hzrCjrcRZ-GhJpWk05u12y_pXgpQ/formResponse', {
         method: 'POST',
@@ -122,15 +57,17 @@
         body: formData
       })
       .then(() => {
-        document.getElementById('response').innerText = 'Údaje byly úspěšně odeslány!';
+        response.style.color = '#10b981';
+        response.innerText = 'Údaje byly úspěšně odeslány!';
         document.getElementById('timestamp').innerText = getCurrentDateTimeString();
-        document.getElementById('name').value = '';
+        document.getElementById('heslo').value = '';
         document.getElementById('location').value = '';
       })
       .catch(error => {
-        document.getElementById('response').innerText = 'Nastala chyba: ' + error.message;
+        response.style.color = '#ef4444';
+        response.innerText = 'Nastala chyba: ' + error.message;
       });
-    });
-  </script>
-</body>
-</html>
+
+    }).ziskejJmenoZHesla(heslo);
+  });
+</script>
