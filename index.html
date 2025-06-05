@@ -104,8 +104,8 @@
         return;
       }
 
-      // Odeslání ověřovacího požadavku pro heslo
-      const response = await fetch(`${API_URL}/zaznamenejDochazku`, {
+      // Odeslání dat do Google Apps Script
+      const response = await fetch(API_URL, {
         method: 'POST',
         body: JSON.stringify({ heslo: code, misto: location }), // Odeslání hesla a místa
         headers: {
