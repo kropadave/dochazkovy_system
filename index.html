@@ -56,6 +56,18 @@
       font-size: 14px;
       color: #6b7280;
     }
+    .link-button {
+      background-color: transparent;
+      color: #6b7280;
+      text-decoration: underline;
+      border: none;
+      cursor: pointer;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+    .link-button:hover {
+      color: #111827;
+    }
   </style>
 </head>
 <body>
@@ -72,6 +84,9 @@
     <button id="submit">Odeslat</button>
     <div id="response"></div>
     <div id="timestamp"></div>
+    <button class="link-button" onclick="window.open('https://script.google.com/macros/s/AKfycbzWP0LiJiOzILaWU2GhBasYQKrBB_TOGagswVSQK9Sxz3AL2bHVydCf6d99ETI_DBA4/exec', '_blank')">
+      Nejsi zaregistrovaný?
+    </button>
   </div>
 
   <script>
@@ -82,7 +97,6 @@
       return `Aktuální čas: ${date} ${time}`;
     }
 
-    // Zobrazí aktuální čas při načtení stránky
     document.getElementById('timestamp').innerText = getCurrentDateTimeString();
 
     document.getElementById('submit').addEventListener('click', function () {
@@ -95,10 +109,9 @@
       }
 
       const formData = new FormData();
-      formData.append('entry.736433288', name);      // Jméno
-      formData.append('entry.685021946', location);  // Místo
+      formData.append('entry.736433288', name);
+      formData.append('entry.685021946', location);
 
-      // Odeslání dat na Google Forms
       fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSefMUVcf4PUCw1EhVrco_hzrCjrcRZ-GhJpWk05u12y_pXgpQ/formResponse', {
         method: 'POST',
         mode: 'no-cors',
