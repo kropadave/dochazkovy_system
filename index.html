@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Docházkový systém</title>
   <style>
     body {
@@ -15,7 +15,7 @@
       height: 100vh;
     }
     .container {
-      background-color: #ffffff;
+      background-color: #fff;
       padding: 30px 40px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -49,6 +49,7 @@
     #response {
       margin-top: 15px;
       font-size: 14px;
+      color: #10b981;
     }
     #timestamp {
       margin-top: 10px;
@@ -60,7 +61,7 @@
 <body>
   <div class="container">
     <h1>Docházkový systém</h1>
-    <input type="text" id="code" placeholder="Zadejte svůj 6místný kód" maxlength="6" required />
+    <input type="text" id="kod" placeholder="Zadejte kód (heslo)" maxlength="6" pattern="\d{6}" title="6 číslic" required />
     <select id="location" required>
       <option value="">-- Vyber místo --</option>
       <option>ZŠ Purkyňova Vyškov</option>
@@ -74,8 +75,6 @@
   </div>
 
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzWP0LiJiOzILaWU2GhBasYQKrBB_TOGagswVSQK9Sxz3AL2bHVydCf6d99ETI_DBA4/exec'; // ← sem vlož URL z Apps Script
-
     function getCurrentDateTimeString() {
       const now = new Date();
       const date = now.toLocaleDateString('cs-CZ');
@@ -83,50 +82,27 @@
       return `Aktuální čas: ${date} ${time}`;
     }
 
+    // Zobrazí aktuální čas při načtení stránky
     document.getElementById('timestamp').innerText = getCurrentDateTimeString();
 
-    async function overKod(code) {
-      try {
-        const response = await fetch(`${API_URL}?code=${code}`);
-        const data = await response.json();
-        return data.exists;
-      } catch (error) {
-        console.error('Chyba při ověřování kódu:', error);
-        return false;
-      }
-    }
+    // Povolit pouze čísla a max 6 znaků v poli kód
+    const kodInput = document.getElementById('kod');
+    kodInput.addEventListener('input', () => {
+      kodInput.value = kodInput.value.replace(/\D/g, '').slice(0,6);
+    });
 
-    document.getElementById('submit').addEventListener('click', async function () {
-      const codeInput = document.getElementById('code');
-      const code = codeInput.value.trim();
+    document.getElementById('submit').addEventListener('click', function () {
+      const kod = kodInput.value.trim();
       const location = document.getElementById('location').value;
-      const responseElem = document.getElementById('response');
 
-      // Validace kódu: pouze 6 číslic
-      if (!/^\d{6}$/.test(code)) {
-        responseElem.innerText = 'Zadejte platný 6místný číselný kód.';
-        responseElem.style.color = '#ef4444';
+      if (kod.length !== 6 || !location) {
+        document.getElementById('response').innerText = 'Zadejte platný 6místný kód a vyberte místo.';
         return;
       }
 
-      if (!location) {
-        responseElem.innerText = 'Vyberte místo.';
-        responseElem.style.color = '#ef4444';
-        return;
-      }
-
-      const kodExistuje = await overKod(code);
-
-      if (!kodExistuje) {
-        responseElem.innerText = 'Zadaný kód neexistuje.';
-        responseElem.style.color = '#ef4444';
-        return;
-      }
-
-      // Odeslání do Google Forms
       const formData = new FormData();
-      formData.append('entry.736433288', code);       // ← ID pole pro kód
-      formData.append('entry.685021946', location);   // ← ID pole pro místo
+      formData.append('entry.736433288', kod);       // místo jména teď kód (heslo)
+      formData.append('entry.685021946', location);  // místo
 
       fetch('https://docs.google.com/forms/u/0/d/e/1FAIpQLSefMUVcf4PUCw1EhVrco_hzrCjrcRZ-GhJpWk05u12y_pXgpQ/formResponse', {
         method: 'POST',
@@ -134,21 +110,14 @@
         body: formData
       })
       .then(() => {
-        responseElem.innerText = 'Údaje byly úspěšně odeslány!';
-        responseElem.style.color = '#10b981';
+        document.getElementById('response').innerText = 'Údaje byly úspěšně odeslány!';
         document.getElementById('timestamp').innerText = getCurrentDateTimeString();
-        codeInput.value = '';
+        kodInput.value = '';
         document.getElementById('location').value = '';
       })
       .catch(error => {
-        responseElem.innerText = 'Nastala chyba: ' + error.message;
-        responseElem.style.color = '#ef4444';
+        document.getElementById('response').innerText = 'Nastala chyba: ' + error.message;
       });
-    });
-
-    // Povolit jen čísla při psaní
-    document.getElementById('code').addEventListener('input', function () {
-      this.value = this.value.replace(/\D/g, '').slice(0, 6);
     });
   </script>
 </body>
